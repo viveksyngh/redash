@@ -34,7 +34,9 @@ class Cassandra(BaseQueryRunner):
 
     @classmethod
     def configuration_schema(cls):
-        return {
+        show_ssl_settings = parse_boolean(os.environ.get('CAAS_SHOW_SSL_SETTINGS', 'true'))
+        
+        schema = {
             'type': 'object',
             'properties': {
                 'host': {
@@ -69,6 +71,29 @@ class Cassandra(BaseQueryRunner):
             },
             'required': ['keyspace', 'host']
         }
+
+        if show_ssl_settings:
+            schema['properties'].update({
+                'use_ssl': {
+                    'type': 'boolean',
+                    'title': 'Use SSL'
+                },
+                'ssl_cacert': {
+                    'type': 'string',
+                    'title': 'Path to CA certificate file to verify peer against (SSL)'
+                },
+                'ssl_cert': {
+                    'type': 'string',
+                    'title': 'Path to client certificate file (SSL)'
+                },
+                'ssl_key': {
+                    'type': 'string',
+                    'title': 'Path to private key file (SSL)'
+                }
+            })
+        
+        return schema
+
 
     @classmethod
     def type(cls):
@@ -143,6 +168,20 @@ class Cassandra(BaseQueryRunner):
             json_data = None
 
         return json_data, error
+    
+    def _get_ssl_parameters(self):
+        ssl_params = {}
+
+        if self.configuration.get('use_ssl'):
+            config_map = dict(ssl_cacert='ca_certs',
+                              ssl_cert='certfile',
+                              ssl_key='keyfile')
+            for key, cfg in config_map.items():
+                val = self.configuration.get(key)
+                if val:
+                    ssl_params[cfg] = val
+
+        return ssl_params
 
 
 class ScyllaDB(Cassandra):
