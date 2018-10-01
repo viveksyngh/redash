@@ -3,6 +3,7 @@ import logging
 import uuid
 
 from redash.query_runner import BaseQueryRunner, register
+from redash.settings import parse_boolean
 from redash.utils import JSONEncoder
 
 logger = logging.getLogger(__name__)
