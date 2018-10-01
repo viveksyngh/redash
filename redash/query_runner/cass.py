@@ -1,6 +1,7 @@
 import json
 import logging
 import uuid
+import os
 
 from redash.query_runner import BaseQueryRunner, register
 from redash.settings import parse_boolean
